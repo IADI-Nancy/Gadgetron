@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <version>2</version>
+
+    <readers>
+        <reader>
+            <dll>gadgetron_mricore</dll>
+            <classname>GadgetIsmrmrdAcquisitionMessageReader</classname>
+        </reader>
+        <reader>
+            <dll>gadgetron_mricore</dll>
+            <classname>GadgetIsmrmrdWaveformMessageReader</classname>
+        </reader>
+    </readers>
+    <writers>
+        <writer>
+            <dll>gadgetron_mricore</dll>
+            <classname>MRIImageWriter</classname>
+        </writer>
+    </writers>
+
+    
+
+    <stream>
+        <!-- RO asymmetric echo handling -->
+        <gadget>
+            <name>AsymmetricEcho</name>
+            <dll>gadgetron_mricore</dll>
+            <classname>AsymmetricEchoAdjustROGadget</classname>
+        </gadget>
+
+        <gadget>
+            <name>RemoveROOversampling</name>
+            <dll>gadgetron_mricore</dll>
+            <classname>RemoveROOversamplingGadget</classname>
+        </gadget>
+
+	<!-- Save the k-space lines timestapmps, etc. -->
+        <gadget>
+            <name>SaveKspaceData</name>
+            <dll>gadgetron_iadi</dll>
+            <classname>SaveKspaceData</classname>
+            <property>
+                <name>savePhysiological</name>
+                <value>false</value>
+            </property>
+        </gadget>
+
+        <gadget>
+            <name>AccTrig</name>
+            <dll>gadgetron_mricore</dll>
+            <classname>AcquisitionAccumulateTriggerGadget</classname>
+            <property>
+                <name>trigger_dimension</name>
+                <value>repetition</value>
+            </property>
+            <property>
+                <name>sorting_dimension</name>
+                <value>repetition</value>
+            </property>
+        </gadget>
+
+        <gadget>
+            <name>Buff</name>
+            <dll>gadgetron_mricore</dll>
+            <classname>BucketToBufferGadget</classname>
+            <property><name>N_dimension</name><value>average</value></property>
+            <property><name>S_dimension</name><value>set</value></property>
+            <property><name>split_slices</name><value>false</value></property>
+            <property><name>ignore_segment</name><value>true</value></property>
+        </gadget>
+
+        <!-- <external>
+            <connect address="localhost" port="18003"/>
+            <configuration/>
+        </external> -->
+        <external>
+            <execute name="ReceiveSAECDataGadget" target="ReceiveSAECDataGadget" type="python"/>
+            <configuration/>
+        </external>
+
+        <!-- Prep ref -->
+        <gadget>
+            <name>PrepRef</name>
+            <dll>gadgetron_mricore</dll>
+            <classname>GenericReconCartesianReferencePrepGadget</classname>
+
+            <!-- parameters for debug and timing -->
+            <property><name>debug_folder</name><value></value></property>
+            <property><name>perform_timing</name><value>true</value></property>
+            <property><name>verbose</name><value>true</value></property>
+
+            <!-- averaging across repetition -->
+            <property><name>average_all_ref_N</name><value>true</value></property>
+            <!-- every set has its own kernels -->
+            <property><name>average_all_ref_S</name><value>true</value></property>
+            <!-- whether always to prepare ref if no acceleration is used -->
+            <property><name>prepare_ref_always</name><value>true</value></property>
+        </gadget>
+
+
+	<gadget> <!-- Your model-based reconstruction gadget here -->
+	    <name>SimpleRecon</name>
+	    <dll>gadgetron_mricore</dll>
+	    <classname>SimpleReconGadget</classname>
+	</gadget>
+
+	<!-- Sort slices with their spatial coordinates -->
+        <gadget>
+            <name>ReorderSlicesGadget</name>
+            <dll>gadgetron_iadi</dll>
+            <classname>ReorderSlicesGadget</classname>
+        </gadget>    
+        
+        <gadget>
+            <name>ImageArraySplit</name>
+            <dll>gadgetron_mricore</dll>
+            <classname>ImageArraySplitGadget</classname>
+        </gadget>
+
+        <gadget>
+            <name>Extract</name>
+            <dll>gadgetron_mricore</dll>
+            <classname>ExtractGadget</classname>
+            <property><name>extract_phase</name><value>true</value></property>
+        </gadget>
+
+        <gadget>
+            <name>AutoScale</name>
+            <dll>gadgetron_mricore</dll>
+            <classname>AutoScaleGadget</classname>
+        </gadget>
+
+        <gadget>
+            <name>FloatToShort</name>
+            <dll>gadgetron_mricore</dll>
+            <classname>FloatToUShortGadget</classname>
+        </gadget>
+
+        <gadget>
+            <name>ImageFinish</name>
+            <dll>gadgetron_mricore</dll>
+            <classname>ImageFinishGadget</classname>
+        </gadget>
+    </stream>
+
+</configuration>
